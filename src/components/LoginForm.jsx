@@ -82,7 +82,7 @@ export default function LoginForm() {
     return (
         <div className="bg-[#f7f7f7] text-black w-full h-screen flex flex-col">
             <Header />
-            <div className="flex flex-grow mt-5 ml-1 h-full justify-center items-center ">
+            <div className="flex flex-grow mt-5 p-2 ml-1 h-full justify-center items-center ">
                 <div className="min-h-[514px] mb-[10px] w-full max-w-[360px] flex flex-col">
                     {/* Header */}
                     <div className="w-full">
@@ -194,7 +194,7 @@ export default function LoginForm() {
                                 </div>
 
                                 {/* Login with email */}
-                                <div className='flex md:hidden flex-col items-center gap-[0.4rem] text-[#191c1f]'>
+                                <div className='hidden flex-col items-center gap-[0.4rem] text-[#191c1f]'>
                                     <button className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'>
                                         <img src="https://assets.revolut.com/assets/icons/Qr.svg" alt="" />
                                     </button>
@@ -206,7 +206,6 @@ export default function LoginForm() {
 
 
                             {/* Login Option */}
-
                             <div className='flex flex-col mt-[8px] gap-[0.75rem]'>
                                 <div className='inter text-[#717173] font-normal text-[0.75rem] text-center'>
                                     Don't have an account?
