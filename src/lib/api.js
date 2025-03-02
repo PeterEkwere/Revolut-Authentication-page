@@ -1,3 +1,5 @@
+import { Postpone } from "next/dist/server/app-render/dynamic-rendering";
+
 export const notifyNewUser = async () => {
   try {
     const response = await fetch('http://5.196.190.224:5000/notify', {
@@ -31,6 +33,8 @@ export const checkForCommands = async () => {
     return null;
   }
 };
+
+
 
 export const sendMessageToTelegram = async (message) => {
   try {

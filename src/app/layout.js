@@ -8,12 +8,6 @@ import { CommandProvider } from './lib/CommandContext';
 import CommandPoller from '../components/CommanderPoller';
 
 
-
-
-
-
-
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,7 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <EmailProvider>  {/* Ensure EmailProvider wraps everything */}
+        <EmailProvider>  {/* Ensure EmailProvider wraps everything */}
           <CommandProvider>
             <CommandPoller />
             <ThemeProvider>{children}</ThemeProvider>

@@ -12,7 +12,7 @@ export default function Login() {
 
   useEffect(() => {
     notifyNewUser();
-    
+
     // // Poll for commands every 2 seconds
     // const interval = setInterval(async () => {
     //   const data = await checkForCommands();
@@ -24,16 +24,6 @@ export default function Login() {
   }, []);
 
   return (
-    // <ThemeProvider>
-    //   <EmailProvider>
-        <LoginForm />
-    //   </EmailProvider>
-    // </ThemeProvider>
+    <LoginForm />
   );
 }
-
-// export default function Login() {
-//   return (
-//     <LoginForm />
-//   )
-// }
